@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Students CRUD</title>
+<style>
+    body { font-family: Arial; padding: 20px; background: #f7f7f7; }
+    h1 { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 10px; text-align: left; }
+    button { padding: 8px 14px; margin: 3px; cursor: pointer; }
+    .add-box, .edit-box {
+        background: white; padding: 15px; margin-top: 20px;
+        border: 1px solid #ccc; border-radius: 5px;
+    }
+</style>
+</head>
+<body>
+
+<h1>📘 School Students — CRUD</h1>
+
+<button onclick="loadStudents()">Load Students</button>
+
+<table id="studentsTable">
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Stage</th><th>Class</th>
+            <th>Parent</th><th>Phone</th><th>Address</th><th>Status</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Add Student -->
+<div class="add-box">
+    <h3>Add Student</h3>
+    <input id="a_name" placeholder="Full Name"><br><br>
+    <input id="a_stage" placeholder="Stage Code"><br><br>
+    <input id="a_class" placeholder="Class Name"><br><br>
+    <input id="a_parent" placeholder="Parent Name"><br><br>
+    <input id="a_phone" placeholder="Parent Phone"><br><br>
+    <input id="a_address" placeholder="Address"><br><br>
+    <button onclick="addStudent()">Add</button>
+</div>
+
+<!-- Edit Student -->
+<div class="edit-box" style="display:none;">
+    <h3>Edit Student</h3>
+    <input id="e_id" type="hidden">
+    <input id="e_name" placeholder="Full Name"><br><br>
+    <input id="e_stage" placeholder="Stage Code"><br><br>
+    <input id="e_class" placeholder="Class Name"><br><br>
+    <input id="e_parent" placeholder="Parent Name"><br><br>
+    <input id="e_phone" placeholder="Parent Phone"><br><br>
+    <input id="e_address" placeholder="Address"><br><br>
+    <button onclick="updateStudent()">Update</button>
+    <button onclick="document.querySelector('.edit-box').style.display='none'">Cancel</button>
+</div>
+
+<script>
+const API = "https://oracleapex.com/ords/mrwebdevcode/school/students";
+
+// Load Students
+function loadStudents() {
+    fetch(API)
+    .then(res => res.json())
+    .then(data => {
+        let rows = "";
+        data.forEach(s => {
+            rows += `
+                <tr>
+                    <td>${s.student_id}</td>
+                    <td>${s.full_name}</td>
+                    <td>${s.stage_code}</td>
+                    <td>${s.class_name}</td>
+                    <td>${s.parent_name}</td>
+                    <td>${s.parent_phone}</td>
+                    <td>${s.address}</td>
+                    <td>${s.status}</td>
+                    <td>
+                        <button onclick='editForm(${JSON.stringify(s)})'>Edit</button>
+                        <button onclick='deleteStudent(${s.student_id})' style="background:red;color:white;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        document.querySelector("#studentsTable tbody").innerHTML = rows;
+    })
+    .catch(() => alert("API Offline (Oracle Maintenance)"));
+}
+
+// Add Student
+function addStudent() {
+    let body = {
+        full_name: document.getElementById("a_name").value,
+        stage_code: document.getElementById("a_stage").value,
+        class_name: document.getElementById("a_class").value,
+        parent_name: document.getElementById("a_parent").value,
+        parent_phone: document.getElementById("a_phone").value,
+        address: document.getElementById("a_address").value
+    };
+
+    fetch(API, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(body)
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Student Added");
+        loadStudents();
+    });
+}
+
+// Open Edit Form
+function editForm(s) {
+    document.getElementById("e_id").value = s.student_id;
+    document.getElementById("e_name").value = s.full_name;
+    document.getElementById("e_stage").value = s.stage_code;
+    document.getElementById("e_class").value = s.class_name;
+    document.getElementById("e_parent").value = s.parent_name;
+    document.getElementById("e_phone").value = s.parent_phone;
+    document.getElementById("e_address").value = s.address;
+
+    document.querySelector(".edit-box").style.display = "block";
+}
+
+// Update Student
+function updateStudent() {
+    let body = {
+        student_id: document.getElementById("e_id").value,
+        full_name: document.getElementById("e_name").value,
+        stage_code: document.getElementById("e_stage").value,
+        class_name: document.getElementById("e_class").value,
+        parent_name: document.getElementById("e_parent").value,
+        parent_phone: document.getElementById("e_phone").value,
+        address: document.getElementById("e_address").value
+    };
+
+    fetch(API, {
+        method: "PUT",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(body)
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Updated!");
+        loadStudents();
+        document.querySelector(".edit-box").style.display = "none";
+    });
+}
+
+// Delete Student
+function deleteStudent(id) {
+    if (!confirm("Delete this student?")) return;
+
+    fetch(API, {
+        method: "DELETE",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ student_id: id })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Deleted");
+        loadStudents();
+    });
+}
+</script>
+
+</body>
+</html>
